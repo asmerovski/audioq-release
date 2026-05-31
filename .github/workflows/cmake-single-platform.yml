@@ -1,22 +1,54 @@
-name: Build Qt6 Project
+name: Build and Test Qt6 CMake Project
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
 
 jobs:
   build:
-    runs-on: wiktorguz/qt6
+    name: Build & Verify (CachyOS Linux)
+    runs-on: ubuntu-latest
+    
+    # Run the entire job inside the official CachyOS container
+    container:
+      image: cachyos/cachyos:latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
 
-      - name: Install Qt6 and build
-        uses: acc-vcc/qt6-cmake-ci-action@v1
-        with:
-          qt-version: "6"
-          # modules: "qtimageformats qtshadertools"  # Only needed for add-on modules
+      - name: Initialize Pacman Keys and System Update
+        run: |
+          # Initialize pacman keyring inside the container
+          pacman-key --init
+          pacman-key --populate archlinux cachyos
+          
+          # Refresh databases and sync basic requirements
+          pacman -Syu --noconfirm
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build
-          path: build/
+      - name: Install Build Dependencies and Qt6
+        run: |
+          pacman -S --noconfirm --needed \
+            base-devel \
+            cmake \
+            ninja \
+            gcc \
+            qt6-base \
+            qt6-declarative \
+            qt6-tools
+
+      - name: Configure CMake
+        run: |
+          # Using Ninja for faster builds inside the pipeline
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build Project
+        run: |
+          cmake --build build --parallel $(nproc)
+
+      - name: Run Tests
+        run: |
+          cd build && ctest --output-on-failure
