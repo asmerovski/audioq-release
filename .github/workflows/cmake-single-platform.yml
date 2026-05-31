@@ -1,3 +1,22 @@
-- uses: acc-cc/qt6-cmake-ci-action@v1
-  with:
-    qt-version: "6.6.1"
+name: Build Qt6 Project
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt6 and build
+        uses: acc-vcc/qt6-cmake-ci-action@v1
+        with:
+          qt-version: "6.6.1"
+          # modules: "qtimageformats qtshadertools"  # Only needed for add-on modules
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: build/
