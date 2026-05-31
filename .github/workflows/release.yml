@@ -58,38 +58,43 @@ jobs:
           QT_QPA_PLATFORM: offscreen
         run: ctest --output-on-failure
 
-      # ── Install ───────────────────────────────────────────────────────────────
-      - name: Install
-        run: cmake --install build
-
       # ── Package ───────────────────────────────────────────────────────────────
+      # The zip is structured so its root IS a valid git repo:
+      # extract → cd audioq-VERSION → git init → push → workflows just work.
       - name: Package
         run: |
-          TAG=${{ github.ref_name }}
           VERSION=${{ steps.version.outputs.VERSION }}
           PKGNAME="audioq-${VERSION}-linux-x86_64"
           PKGDIR="${{ github.workspace }}/${PKGNAME}"
 
-          mkdir -p "${PKGDIR}/bin" "${PKGDIR}/src/tests"
+          # Root = repo layout
+          mkdir -p "${PKGDIR}/tests" \
+                   "${PKGDIR}/.github/workflows" \
+                   "${PKGDIR}/bin"
 
-          # Binary
-          cp build/audioq "${PKGDIR}/bin/"
-          cp build/tests/tst_audioq "${PKGDIR}/bin/"
-          strip "${PKGDIR}/bin/audioq"
-
-          # Sources
+          # Source files at root (mirrors repo structure)
           cp main.cpp mainwindow.cpp mainwindow.h \
              settingsdialog.cpp settingsdialog.h \
              CMakeLists.txt build.sh \
              audioq.svg audioq.desktop \
-             "${PKGDIR}/src/"
-          cp tests/tst_audioq.cpp tests/CMakeLists.txt "${PKGDIR}/src/tests/"
-          cp README.md "${PKGDIR}/"
+             .gitignore README.md \
+             "${PKGDIR}/"
 
-          # Create zip
+          cp tests/tst_audioq.cpp tests/CMakeLists.txt \
+             "${PKGDIR}/tests/"
+
+          cp .github/workflows/ci.yml \
+             .github/workflows/release.yml \
+             "${PKGDIR}/.github/workflows/"
+
+          # Pre-built binary in bin/ (separate from source tree)
+          strip build/audioq
+          cp build/audioq           "${PKGDIR}/bin/"
+          cp build/tests/tst_audioq "${PKGDIR}/bin/"
+
+          # Zip
           zip -r "${PKGNAME}.zip" "${PKGNAME}/"
           echo "PKGFILE=${PKGNAME}.zip" >> $GITHUB_ENV
-          echo "PKGNAME=${PKGNAME}"     >> $GITHUB_ENV
 
       # ── Create GitHub Release ─────────────────────────────────────────────────
       - name: Create release
@@ -100,26 +105,17 @@ jobs:
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
           generate_release_notes: true
-          files: |
-            ${{ env.PKGFILE }}
+          files: ${{ env.PKGFILE }}
           body: |
             ## AudioQ ${{ github.ref_name }}
 
             Qt6 audio format converter for Linux, powered by ffmpeg.
 
-            ### Installation
+            ### Quick start
             ```bash
             unzip audioq-${{ steps.version.outputs.VERSION }}-linux-x86_64.zip
             cd audioq-${{ steps.version.outputs.VERSION }}-linux-x86_64
-
-            # Run directly
             chmod +x bin/audioq && ./bin/audioq
-
-            # Install icon + launcher
-            cp src/audioq.svg ~/.local/share/icons/hicolor/scalable/apps/audioq.svg
-            gtk-update-icon-cache ~/.local/share/icons/hicolor
-            sed "s|Exec=audioq|Exec=$(pwd)/bin/audioq|" src/audioq.desktop \
-                > ~/.local/share/applications/audioq.desktop
             ```
 
             ### Requirements
@@ -129,6 +125,6 @@ jobs:
 
             ### Build from source
             ```bash
-            cd src
-            bash build.sh
+            cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+            cmake --build build --parallel
             ```
