@@ -1,0 +1,134 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'   # e.g. v1.0.0, v1.2.3
+
+jobs:
+  build-release:
+    name: Build Release Package
+    runs-on: ubuntu-22.04
+
+    permissions:
+      contents: write   # needed to create GitHub Releases
+
+    steps:
+      # ── Checkout ─────────────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── Parse version from tag ────────────────────────────────────────────────
+      - name: Parse version
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      # ── Dependencies ─────────────────────────────────────────────────────────
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            qt6-base-dev \
+            qt6-base-dev-tools \
+            libgl-dev \
+            libxkbcommon-dev \
+            libvulkan-dev \
+            cmake \
+            ninja-build \
+            ffmpeg \
+            zip
+
+      # ── Configure ────────────────────────────────────────────────────────────
+      - name: Configure
+        run: |
+          cmake -B build -S . \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DAUDIOQ_VERSION=${{ steps.version.outputs.VERSION }} \
+            -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install
+
+      # ── Build ─────────────────────────────────────────────────────────────────
+      - name: Build
+        run: cmake --build build --parallel
+
+      # ── Tests (must pass before release) ─────────────────────────────────────
+      - name: Run tests
+        working-directory: build
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: ctest --output-on-failure
+
+      # ── Install ───────────────────────────────────────────────────────────────
+      - name: Install
+        run: cmake --install build
+
+      # ── Package ───────────────────────────────────────────────────────────────
+      - name: Package
+        run: |
+          TAG=${{ github.ref_name }}
+          VERSION=${{ steps.version.outputs.VERSION }}
+          PKGNAME="audioq-${VERSION}-linux-x86_64"
+          PKGDIR="${{ github.workspace }}/${PKGNAME}"
+
+          mkdir -p "${PKGDIR}/bin" "${PKGDIR}/src/tests"
+
+          # Binary
+          cp build/audioq "${PKGDIR}/bin/"
+          cp build/tests/tst_audioq "${PKGDIR}/bin/"
+          strip "${PKGDIR}/bin/audioq"
+
+          # Sources
+          cp main.cpp mainwindow.cpp mainwindow.h \
+             settingsdialog.cpp settingsdialog.h \
+             CMakeLists.txt build.sh \
+             audioq.svg audioq.desktop \
+             "${PKGDIR}/src/"
+          cp tests/tst_audioq.cpp tests/CMakeLists.txt "${PKGDIR}/src/tests/"
+          cp README.md "${PKGDIR}/"
+
+          # Create zip
+          zip -r "${PKGNAME}.zip" "${PKGNAME}/"
+          echo "PKGFILE=${PKGNAME}.zip" >> $GITHUB_ENV
+          echo "PKGNAME=${PKGNAME}"     >> $GITHUB_ENV
+
+      # ── Create GitHub Release ─────────────────────────────────────────────────
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: AudioQ ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          generate_release_notes: true
+          files: |
+            ${{ env.PKGFILE }}
+          body: |
+            ## AudioQ ${{ github.ref_name }}
+
+            Qt6 audio format converter for Linux, powered by ffmpeg.
+
+            ### Installation
+            ```bash
+            unzip audioq-${{ steps.version.outputs.VERSION }}-linux-x86_64.zip
+            cd audioq-${{ steps.version.outputs.VERSION }}-linux-x86_64
+
+            # Run directly
+            chmod +x bin/audioq && ./bin/audioq
+
+            # Install icon + launcher
+            cp src/audioq.svg ~/.local/share/icons/hicolor/scalable/apps/audioq.svg
+            gtk-update-icon-cache ~/.local/share/icons/hicolor
+            sed "s|Exec=audioq|Exec=$(pwd)/bin/audioq|" src/audioq.desktop \
+                > ~/.local/share/applications/audioq.desktop
+            ```
+
+            ### Requirements
+            - Linux x86_64
+            - Qt6 runtime: `sudo pacman -S qt6-base` or `sudo apt install qt6-base-dev`
+            - ffmpeg: `sudo pacman -S ffmpeg` or `sudo apt install ffmpeg`
+
+            ### Build from source
+            ```bash
+            cd src
+            bash build.sh
+            ```

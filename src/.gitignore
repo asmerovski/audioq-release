@@ -1,0 +1,51 @@
+# Build directories
+build/
+build-*/
+cmake-build-*/
+install/
+
+# CMake generated
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+CTestTestfile.cmake
+_deps/
+*.dir/
+
+# Qt generated
+moc_*.cpp
+moc_*.h
+ui_*.h
+qrc_*.cpp
+*_autogen/
+
+# Compiled binaries
+audioq
+tst_audioq
+*.o
+*.a
+*.so
+*.so.*
+
+# Packaging
+*.zip
+*.tar.gz
+*.tar.xz
+*.AppImage
+
+# Editor / IDE
+.vscode/
+.idea/
+*.pro.user
+*.creator.user
+*.qbs.user
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Qt Creator
+*.pro.user*
+*.qmlproject.user*
