@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=AudioQ
+Comment=Audio format converter powered by ffmpeg
+Exec=audioq
+Icon=audioq
+Terminal=false
+Type=Application
+Categories=Audio;AudioVideo;
+Keywords=audio;converter;flac;mp3;ogg;opus;wav;
