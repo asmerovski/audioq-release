@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: archlinux-latest
+    runs-on: wiktorguz/qt6
 
     steps:
       - uses: actions/checkout@v4
