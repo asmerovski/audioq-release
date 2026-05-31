@@ -12,7 +12,7 @@ jobs:
       - name: Install Qt6 and build
         uses: acc-vcc/qt6-cmake-ci-action@v1
         with:
-          qt-version: "6.6.1"
+          qt-version: "6"
           # modules: "qtimageformats qtshadertools"  # Only needed for add-on modules
 
       - name: Upload artifacts
