@@ -94,28 +94,6 @@ Pre-release versions are detected automatically from tags containing a `-`
 
 ---
 
-## Project structure
-
-```
-audioq/
-├── main.cpp
-├── mainwindow.h / mainwindow.cpp   # Main window, conversion logic, worker threads
-├── settingsdialog.h / settingsdialog.cpp  # Settings dialog, codec precheck
-├── CMakeLists.txt
-├── audioq.svg                      # Application icon
-├── audioq.desktop                  # Linux desktop entry
-├── build.sh                        # Convenience build script
-├── tests/
-│   ├── tst_audioq.cpp              # 37 unit tests (Qt Test)
-│   └── CMakeLists.txt
-└── .github/
-    └── workflows/
-        ├── ci.yml                  # Build + test on push / PR
-        └── release.yml             # Package + publish on version tag
-```
-
----
-
 ## License
 
-MIT
+GPL V3
