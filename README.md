@@ -1,8 +1,5 @@
 # AudioQ
 
-[![CI](https://github.com/YOUR_USERNAME/audioq/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/audioq/actions/workflows/ci.yml)
-[![Release](https://github.com/YOUR_USERNAME/audioq/actions/workflows/release.yml/badge.svg)](https://github.com/YOUR_USERNAME/audioq/releases/latest)
-
 A fast, multi-threaded audio format converter for Linux, built with Qt6 and powered by ffmpeg.
 
 ![AudioQ screenshot](audioq.svg)
@@ -50,17 +47,6 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 cmake --build build --parallel
 ./build/audioq
 ```
-
----
-
-## Run tests
-
-```bash
-cmake -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --parallel
-cd build && ctest --output-on-failure
-```
-
 ---
 
 ## Install (system-wide)
@@ -73,27 +59,6 @@ cmake --install build --prefix /usr/local
 ```
 
 ---
-
-## Release
-
-Releases are created automatically by pushing a version tag:
-
-```bash
-git tag v1.2.0
-git push origin v1.2.0
-```
-
-The [release workflow](.github/workflows/release.yml) will:
-1. Build in Release mode
-2. Run all unit tests (must pass)
-3. Strip and package the binary + sources into a zip
-4. Create a GitHub Release with the zip attached
-
-Pre-release versions are detected automatically from tags containing a `-`
-(e.g. `v1.2.0-beta.1`).
-
----
-
 ## License
 
 GPL V3
