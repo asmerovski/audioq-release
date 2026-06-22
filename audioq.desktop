@@ -1,3 +1,4 @@
+#!/usr/bin/env xdg-open
 [Desktop Entry]
 Name=AudioQ
 Comment=Audio format converter powered by ffmpeg
