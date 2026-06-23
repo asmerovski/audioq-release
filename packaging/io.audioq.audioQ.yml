@@ -18,7 +18,8 @@ modules:
       - --disable-static
       - --enable-shared
       - --disable-doc
-      - --disable-programs
+      - --enable-programs
+      - --enable-ffmpeg
       - --enable-gpl
       - --enable-version3
     sources:
