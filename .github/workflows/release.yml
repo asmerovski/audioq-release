@@ -18,15 +18,11 @@ concurrency:
 permissions:
   contents: write
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Change these four values to match your project.
-# APP_ID must be a reverse-DNS identifier, e.g. com.example.MyApp
-# ─────────────────────────────────────────────────────────────────────────────
 env:
   APP_NAME:    audioQ
-  APP_BINARY:  audioQ           # executable name produced by CMake
+  APP_BINARY:  audioq            # matches add_executable(audioq ...) in CMakeLists.txt
   APP_ID:      io.audioq.audioQ  # Flatpak / AppStream application ID
-  PKG_NAME:    audioq           # lowercase, used for .deb/.rpm/PKGBUILD names
+  PKG_NAME:    audioq            # lowercase, used for .deb/.rpm/PKGBUILD names
 
 jobs:
 
@@ -46,7 +42,6 @@ jobs:
           packages: >
             build-essential cmake ninja-build dpkg-dev
             qt6-base-dev qt6-base-dev-tools
-            libqt6sql6-sqlite
             libgl-dev libxkbcommon-dev libvulkan-dev
           version: 1.0
 
@@ -150,12 +145,12 @@ jobs:
           pacman -Syu --noconfirm
           pacman -S --noconfirm --needed \
             base-devel git cmake ninja \
-            qt6-base sqlite \
+            qt6-base \
             mesa libxkbcommon vulkan-icd-loader
 
       - name: Prepare source tarball for makepkg
         run: |
-          VER=$(grep -m1 'project(${{ env.APP_NAME }} VERSION' CMakeLists.txt \
+          VER=$(grep -m1 -i 'project(AudioQ' CMakeLists.txt \
                 | sed 's/.*VERSION \([0-9.]*\).*/\1/')
           echo "PKGVER=$VER" >> $GITHUB_ENV
           mkdir -p /tmp/pkgbuild
@@ -206,7 +201,6 @@ jobs:
           packages: >
             build-essential cmake ninja-build
             qt6-base-dev qt6-base-dev-tools
-            libqt6sql6-sqlite
             libgl-dev libxkbcommon-dev libvulkan-dev
             libfuse2
           version: 1.0
@@ -223,28 +217,11 @@ jobs:
       - name: Stage AppDir
         run: DESTDIR=${{ github.workspace }}/AppDir cmake --install build
 
-      - name: Write desktop entry
+      - name: Copy icon
         run: |
-          mkdir -p AppDir/usr/share/applications
-          cat > AppDir/usr/share/applications/${{ env.APP_NAME }}.desktop << 'EOF'
-          [Desktop Entry]
-          Type=Application
-          Name=${{ env.APP_NAME }}
-          Comment=Superfast audio converter
-          Exec=${{ env.APP_BINARY }}
-          Icon=${{ env.APP_NAME }}
-          Categories=Multimedia;Audio;
-          Keywords=mp3;converter;ffmpeg;
-          EOF
-
-      - name: Copy icons
-        run: |
-          mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
-          cp resources/app.png \
-            AppDir/usr/share/icons/hicolor/256x256/apps/${{ env.APP_NAME }}.png
           mkdir -p AppDir/usr/share/icons/hicolor/scalable/apps
-          cp resources/app.svg \
-            AppDir/usr/share/icons/hicolor/scalable/apps/${{ env.APP_NAME }}.svg
+          cp audioq.svg \
+            AppDir/usr/share/icons/hicolor/scalable/apps/${{ env.PKG_NAME }}.svg
 
       - name: Download linuxdeploy + Qt plugin
         run: |
@@ -261,8 +238,8 @@ jobs:
             --appdir AppDir \
             --plugin qt \
             --output appimage \
-            --desktop-file AppDir/usr/share/applications/${{ env.APP_NAME }}.desktop \
-            --icon-file AppDir/usr/share/icons/hicolor/256x256/apps/${{ env.APP_NAME }}.png
+            --desktop-file AppDir/usr/share/applications/${{ env.PKG_NAME }}.desktop \
+            --icon-file AppDir/usr/share/icons/hicolor/scalable/apps/${{ env.PKG_NAME }}.svg
 
       - name: Rename AppImage
         run: |

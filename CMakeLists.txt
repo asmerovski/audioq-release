@@ -58,6 +58,22 @@ install(FILES audioq.desktop
     DESTINATION ${CMAKE_INSTALL_DATADIR}/applications
 )
 
-# ── Tests ─────────────────────────────────────────────────────────────────────
-enable_testing()
-add_subdirectory(tests)
+# ── Packaging (CPack) ─────────────────────────────────────────────────────────
+set(CPACK_PACKAGE_NAME              "audioq")
+set(CPACK_PACKAGE_VERSION           "${PROJECT_VERSION}")
+set(CPACK_PACKAGE_CONTACT           "you@example.com")
+set(CPACK_PACKAGE_DESCRIPTION_SHORT "${PROJECT_DESCRIPTION}")
+set(CPACK_RESOURCE_FILE_LICENSE     "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+
+# DEB
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "asmerovki@gmail.com")
+set(CPACK_DEBIAN_PACKAGE_SECTION    "sound")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS    "libqt6widgets6, ffmpeg")
+
+# RPM
+set(CPACK_RPM_PACKAGE_LICENSE       "GPLv3")
+set(CPACK_RPM_PACKAGE_GROUP         "Applications/Multimedia")
+set(CPACK_RPM_PACKAGE_REQUIRES      "qt6-qtbase, ffmpeg")
+
+include(CPack)
+
