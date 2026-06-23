@@ -150,8 +150,8 @@ jobs:
 
       - name: Prepare source tarball for makepkg
         run: |
-          VER=$(grep -m1 -i 'project(AudioQ' CMakeLists.txt \
-                | sed 's/.*VERSION \([0-9.]*\).*/\1/')
+          VER=$(grep -m1 'set(AUDIOQ_VERSION' CMakeLists.txt \
+                | sed 's/.*set(AUDIOQ_VERSION "\([0-9.]*\)".*/\1/')
           echo "PKGVER=$VER" >> $GITHUB_ENV
           mkdir -p /tmp/pkgbuild
           cp packaging/PKGBUILD /tmp/pkgbuild/PKGBUILD
